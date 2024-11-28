@@ -3,6 +3,7 @@ const morgan = require('morgan');
 const { Client, NoAuth } = require('whatsapp-web.js');
 const { v4: uuidv4 } = require('uuid');
 const { celebrate, Joi, Segments, errors } = require('celebrate');
+const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
 const port = 3000;
@@ -11,6 +12,42 @@ app.use(morgan('dev'));
 app.use(express.json());
 
 const instances = {};
+
+// Configuração do banco de dados SQLite
+const db = new sqlite3.Database('./message_logs.db', (err) => {
+    if (err) {
+        console.error('Erro ao conectar ao banco de dados:', err.message);
+    } else {
+        console.log('Conectado ao banco de dados SQLite.');
+        db.run(`CREATE TABLE IF NOT EXISTS messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            instanceId TEXT,
+            name TEXT,
+            phone TEXT,
+            message TEXT,
+            success BOOLEAN,
+            date TEXT DEFAULT (datetime('now', 'localtime'))
+        )`, (err) => {
+            if (err) {
+                console.error('Erro ao criar tabela:', err.message);
+            } else {
+                console.log('Tabela de mensagens pronta.');
+            }
+        });
+    }
+});
+
+// Função para registrar logs de mensagens no banco de dados
+const logMessage = (instanceId, name, phone, message, success) => {
+    const sql = `INSERT INTO messages (instanceId, name, phone, message, success) VALUES (?, ?, ?, ?, ?)`;
+    const params = [instanceId, name, phone, message, success];
+    db.run(sql, params, function(err) {
+        if (err) {
+            return console.error('Erro ao registrar mensagem:', err.message);
+        }
+        console.log(`Mensagem registrada com ID: ${this.lastID}`);
+    });
+};
 
 // Função para criar e inicializar uma nova instância do cliente
 const createClientInstance = (instanceId, name) => {
@@ -172,6 +209,7 @@ app.post('/send-message', celebrate({
     try {
         const numberDetails = await instance.client.getNumberId(phone);
         if (!numberDetails) {
+            logMessage(instanceId, instance.name, phone, message, false);
             return res.status(404).json({
                 success: false,
                 message: 'O número fornecido não está registrado no WhatsApp.',
@@ -179,6 +217,7 @@ app.post('/send-message', celebrate({
         }
 
         const response = await instance.client.sendMessage(chatId, message);
+        logMessage(instanceId, instance.name, phone, message, true);
         res.json({
             success: true,
             message: 'Mensagem enviada com sucesso.',
@@ -189,6 +228,7 @@ app.post('/send-message', celebrate({
             },
         });
     } catch (err) {
+        logMessage(instanceId, instance.name, phone, message, false);
         res.status(500).json({
             success: false,
             message: 'Erro ao enviar mensagem.',
@@ -199,6 +239,18 @@ app.post('/send-message', celebrate({
 
 // Middleware para lidar com erros de validação do celebrate
 app.use(errors());
+
+// Fechar a conexão com o banco de dados ao encerrar o aplicativo
+process.on('SIGINT', () => {
+    db.close((err) => {
+        if (err) {
+            console.error('Erro ao fechar o banco de dados:', err.message);
+        } else {
+            console.log('Conexão com o banco de dados fechada.');
+        }
+        process.exit(0);
+    });
+});
 
 app.listen(port, () => {
     console.log(`Servidor está rodando em http://localhost:${port}`);
