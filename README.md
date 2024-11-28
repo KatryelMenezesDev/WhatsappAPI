@@ -53,6 +53,7 @@ Essa API é projetada para ser fácil de usar e altamente customizável, garanti
    Crie um arquivo `.env` na raiz do projeto e adicione as seguintes variáveis:
 
 5. **Inicie o ambiente de desenvolvimento** 
+   ```bash
    npm run dev
 
 6. **Compilação e uso em produção**  
