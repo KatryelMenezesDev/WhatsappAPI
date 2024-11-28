@@ -16,5 +16,8 @@
     "uuid": "^11.0.3",
     "whatsapp-web.js": "^1.26.0",
     "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
   }
 }
