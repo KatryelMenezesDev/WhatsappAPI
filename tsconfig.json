@@ -12,20 +12,6 @@
     "baseUrl": "./src",
     "rootDir": "./",
     "outDir": "./dist",
-    "paths": {
-      "@config/*": [
-        "config/*"
-      ],
-      "@modules/*": [
-        "modules/*"
-      ],
-      "@shared/*": [
-        "shared/*"
-      ],
-      "@utils/*": [
-        "utils/*"
-      ]
-    },
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true

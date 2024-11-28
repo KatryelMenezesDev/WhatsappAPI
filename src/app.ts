@@ -1,6 +1,7 @@
 import express from 'express';
 import morgan from 'morgan';
 import swaggerUi from 'swagger-ui-express';
+import yaml from 'yamljs';
 import path from 'path';
 import { errors } from 'celebrate';
 import instanceRoutes from './routes/instanceRoutes';
@@ -17,7 +18,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 
 // Documentação Swagger
-const swaggerDocument = require(path.join(__dirname, '../swagger.yaml'));
+const swaggerDocument = yaml.load(path.resolve(__dirname, '../swagger.yaml'));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Middleware de autenticação
