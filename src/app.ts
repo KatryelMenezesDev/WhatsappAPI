@@ -1,3 +1,4 @@
+import dotenv from 'dotenv';
 import express from 'express';
 import morgan from 'morgan';
 import swaggerUi from 'swagger-ui-express';
@@ -8,7 +9,7 @@ import instanceRoutes from './routes/instanceRoutes';
 import messageRoutes from './routes/messageRoutes';
 import { authenticate } from './middlewares/authenticate';
 import { errorHandler } from './middlewares/errorHandler';
-
+dotenv.config();
 const app = express();
 
 // Middleware de logging
