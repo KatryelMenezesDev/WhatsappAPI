@@ -6,6 +6,7 @@
   "author": "Katryel Menezes <katryelmenezesvieira14@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "express": "^4.21.1",
     "whatsapp-web.js": "^1.26.0"
   }
 }
