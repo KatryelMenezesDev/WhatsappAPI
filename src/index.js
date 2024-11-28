@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const { Client, NoAuth } = require('whatsapp-web.js');
@@ -8,10 +9,6 @@ const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 const path = require('path');
 
-require('dotenv').config();
-
-
-
 // Carrega o arquivo swagger.yaml
 const swaggerDocument = YAML.load(path.join(__dirname, '../swagger.yaml'));
 
@@ -19,10 +16,30 @@ const app = express();
 const port = 3000;
 
 app.use(morgan('dev'));
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// Middleware de autenticação
+const authenticate = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return res.status(401).json({ message: 'Token de autenticação não fornecido.' });
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    if (token !== process.env.SECRET_KEY) {
+        return res.status(403).json({ message: 'Token de autenticação inválido.' });
+    }
+
+    next();
+};
+
 app.use(authenticate);
 app.use(express.json());
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 
 const instances = {};
 
@@ -62,20 +79,7 @@ const logMessage = (instanceId, name, phone, message, success) => {
     });
 };
 
-// Middleware de autenticação
-const authenticate = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ message: 'Token de autenticação não fornecido ou malformado.' });
-    }
 
-    const token = authHeader.split(' ')[1];
-    if (token !== process.env.SECRET_KEY) {
-        return res.status(403).json({ message: 'Token de autenticação inválido.' });
-    }
-
-    next();
-};
 
 
 // Função para criar e inicializar uma nova instância do cliente

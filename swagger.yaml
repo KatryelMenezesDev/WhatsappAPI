@@ -7,10 +7,22 @@ servers:
   - url: http://localhost:3000
     description: Servidor local
 
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
+
 paths:
   /add-instance:
     post:
       summary: Adiciona uma nova instância do WhatsApp
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -63,6 +75,8 @@ paths:
   /instances:
     get:
       summary: Lista todas as instâncias
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Lista de instâncias
@@ -95,6 +109,8 @@ paths:
   /instance/{id}:
     get:
       summary: Obtém detalhes de uma instância específica
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -142,6 +158,8 @@ paths:
                     example: "Instância não encontrada"
     delete:
       summary: Deleta uma instância específica
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -174,6 +192,8 @@ paths:
   /send-message:
     post:
       summary: Envia uma mensagem através de uma instância específica
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
