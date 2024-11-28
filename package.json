@@ -6,7 +6,9 @@
   "author": "Katryel Menezes <katryelmenezesvieira14@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "celebrate": "^15.0.3",
     "express": "^4.21.1",
+    "morgan": "^1.10.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^11.0.3",

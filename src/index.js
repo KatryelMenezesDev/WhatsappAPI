@@ -1,10 +1,13 @@
 const express = require('express');
+const morgan = require('morgan');
 const { Client, NoAuth } = require('whatsapp-web.js');
 const { v4: uuidv4 } = require('uuid');
+const { celebrate, Joi, Segments, errors } = require('celebrate');
 
 const app = express();
 const port = 3000;
 
+app.use(morgan('dev'));
 app.use(express.json());
 
 const instances = {};
@@ -47,13 +50,16 @@ const createClientInstance = (instanceId, name) => {
     client.initialize();
 };
 
-// Endpoint para adicionar uma nova instância
-app.post('/add-instance', (req, res) => {
+// Rota para adicionar uma nova instância
+app.post('/add-instance', celebrate({
+    [Segments.BODY]: Joi.object().keys({
+        name: Joi.string().required().messages({
+            'any.required': 'O campo "name" é obrigatório.',
+            'string.empty': 'O campo "name" não pode estar vazio.',
+        }),
+    }),
+}), (req, res) => {
     const { name } = req.body;
-    if (!name) {
-        return res.status(400).json({ message: 'Nome é obrigatório' });
-    }
-
     const instanceId = uuidv4();
     createClientInstance(instanceId, name);
 
@@ -68,7 +74,7 @@ app.post('/add-instance', (req, res) => {
     });
 });
 
-// Endpoint para listar todas as instâncias com seus QR Codes e status de autenticação
+// Rota para listar todas as instâncias
 app.get('/instances', (req, res) => {
     const instanceList = Object.keys(instances).map(id => ({
         id,
@@ -82,8 +88,15 @@ app.get('/instances', (req, res) => {
     });
 });
 
-// Endpoint para obter detalhes de uma instância específica
-app.get('/instance/:id', (req, res) => {
+// Rota para obter detalhes de uma instância específica
+app.get('/instance/:id', celebrate({
+    [Segments.PARAMS]: Joi.object().keys({
+        id: Joi.string().uuid().required().messages({
+            'any.required': 'O parâmetro "id" é obrigatório.',
+            'string.guid': 'O parâmetro "id" deve ser um UUID válido.',
+        }),
+    }),
+}), (req, res) => {
     const { id } = req.params;
     const instance = instances[id];
     if (instance) {
@@ -101,8 +114,15 @@ app.get('/instance/:id', (req, res) => {
     }
 });
 
-// Endpoint para deletar uma instância
-app.delete('/instance/:id', (req, res) => {
+// Rota para deletar uma instância
+app.delete('/instance/:id', celebrate({
+    [Segments.PARAMS]: Joi.object().keys({
+        id: Joi.string().uuid().required().messages({
+            'any.required': 'O parâmetro "id" é obrigatório.',
+            'string.guid': 'O parâmetro "id" deve ser um UUID válido.',
+        }),
+    }),
+}), (req, res) => {
     const { id } = req.params;
     if (instances[id]) {
         instances[id].client.destroy();
@@ -113,21 +133,26 @@ app.delete('/instance/:id', (req, res) => {
     }
 });
 
-// Endpoint para enviar uma mensagem
-app.post('/send-message', async (req, res) => {
+// Rota para enviar uma mensagem
+app.post('/send-message', celebrate({
+    [Segments.BODY]: Joi.object().keys({
+        instanceId: Joi.string().uuid().required().messages({
+            'any.required': 'O campo "instanceId" é obrigatório.',
+            'string.guid': 'O campo "instanceId" deve ser um UUID válido.',
+        }),
+        phone: Joi.string().pattern(/^\d+$/).required().messages({
+            'any.required': 'O campo "phone" é obrigatório.',
+            'string.pattern.base': 'O campo "phone" deve conter apenas dígitos numéricos.',
+        }),
+        message: Joi.string().required().messages({
+            'any.required': 'O campo "message" é obrigatório.',
+            'string.empty': 'O campo "message" não pode estar vazio.',
+        }),
+    }),
+}), async (req, res) => {
     const { instanceId, phone, message } = req.body;
-
-    // Verifica se todos os parâmetros necessários foram fornecidos
-    if (!instanceId || !phone || !message) {
-        return res.status(400).json({
-            success: false,
-            message: 'Parâmetros ausentes: instanceId, phone e message são obrigatórios.',
-        });
-    }
-
     const instance = instances[instanceId];
 
-    // Verifica se a instância existe
     if (!instance) {
         return res.status(404).json({
             success: false,
@@ -135,7 +160,6 @@ app.post('/send-message', async (req, res) => {
         });
     }
 
-    // Verifica se a instância está autenticada
     if (!instance.auth) {
         return res.status(403).json({
             success: false,
@@ -143,11 +167,9 @@ app.post('/send-message', async (req, res) => {
         });
     }
 
-    // Adiciona o sufixo '@c.us' ao número de telefone
     const chatId = `${phone}@c.us`;
 
     try {
-        // Verifica se o número está registrado no WhatsApp
         const numberDetails = await instance.client.getNumberId(phone);
         if (!numberDetails) {
             return res.status(404).json({
@@ -156,7 +178,6 @@ app.post('/send-message', async (req, res) => {
             });
         }
 
-        // Envia a mensagem
         const response = await instance.client.sendMessage(chatId, message);
         res.json({
             success: true,
@@ -175,6 +196,9 @@ app.post('/send-message', async (req, res) => {
         });
     }
 });
+
+// Middleware para lidar com erros de validação do celebrate
+app.use(errors());
 
 app.listen(port, () => {
     console.log(`Servidor está rodando em http://localhost:${port}`);
