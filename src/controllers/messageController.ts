@@ -15,6 +15,19 @@ class MessageController {
       next(error);
     }
   }
+
+  public async getMessageHistory(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const history = await messageService.getMessageHistory();
+      res.json({
+        success: true,
+        message: 'Histórico de mensagens recuperado com sucesso.',
+        data: history,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export const messageController = new MessageController();

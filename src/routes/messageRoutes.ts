@@ -25,4 +25,6 @@ router.post(
   messageController.sendMessage
 );
 
+router.get('/history', messageController.getMessageHistory);
+
 export default router;

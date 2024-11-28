@@ -1,4 +1,5 @@
 import sqlite3 from 'sqlite3';
+import { Message } from '../models/message';
 
 const db = new sqlite3.Database('./message_logs.db', (err) => {
   if (err) {
@@ -33,5 +34,18 @@ export const logMessage = (instanceId: string, name: string, phone: string, mess
       return;
     }
     console.log(`Mensagem registrada com ID: ${this.lastID}`);
+  });
+};
+
+export const getAllMessages = (): Promise<Message[]> => {
+  return new Promise((resolve, reject) => {
+    const sql = 'SELECT * FROM messages';
+    db.all(sql, [], (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rows as Message[]);
+      }
+    });
   });
 };

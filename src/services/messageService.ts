@@ -1,5 +1,5 @@
 import { instanceService } from './instanceService';
-import { logMessage } from '../utils/database';
+import { logMessage, getAllMessages } from '../utils/database';
 import { Message } from '../models/message';
 
 class MessageService {
@@ -38,6 +38,10 @@ class MessageService {
       logMessage(instanceId, instance.name, phone, message, false);
       throw new Error(`Erro ao enviar mensagem: ${err.message}`);
     }
+  }
+
+  public async getMessageHistory(): Promise<Message[]> {
+    return await getAllMessages();
   }
 }
 
