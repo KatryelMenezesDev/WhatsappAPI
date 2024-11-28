@@ -9,6 +9,7 @@ import instanceRoutes from './routes/instanceRoutes';
 import messageRoutes from './routes/messageRoutes';
 import { authenticate } from './middlewares/authenticate';
 import { errorHandler } from './middlewares/errorHandler';
+import { errorMiddleware } from './middlewares/errorMiddleware';
 dotenv.config();
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/instances', instanceRoutes);
 app.use('/messages', messageRoutes);
 
 // Middleware para lidar com erros de validação
+app.use(errorMiddleware);
 app.use(errors());
 
 // Middleware para lidar com erros gerais

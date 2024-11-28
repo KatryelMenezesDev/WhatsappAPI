@@ -1,17 +1,19 @@
+// src/services/messageService.ts
 import { instanceService } from './instanceService';
-import { logMessage, getAllMessages } from '../utils/database';
+import { logMessage,  getAllMessages} from '../utils/database';
 import { Message } from '../models/message';
+import { HttpException } from '../utils/HttpException';
 
 class MessageService {
   public async sendMessage(instanceId: string, phone: string, message: string): Promise<Message> {
     const instance = instanceService.getInstance(instanceId);
 
     if (!instance) {
-      throw new Error('Instância não encontrada.');
+      throw new HttpException(404, 'Instância não encontrada.');
     }
 
     if (!instance.auth) {
-      throw new Error('Instância não autenticada. Por favor, autentique-se antes de enviar mensagens.');
+      throw new HttpException(403, 'Instância não autenticada. Por favor, autentique-se antes de enviar mensagens.');
     }
 
     const chatId = `${phone}@c.us`;
@@ -20,7 +22,7 @@ class MessageService {
       const numberDetails = await instance.client.getNumberId(phone);
       if (!numberDetails) {
         logMessage(instanceId, instance.name, phone, message, false);
-        throw new Error('O número fornecido não está registrado no WhatsApp.');
+        throw new HttpException(404, 'O número fornecido não está registrado no WhatsApp.');
       }
 
       const response = await instance.client.sendMessage(chatId, message);
@@ -36,7 +38,7 @@ class MessageService {
       };
     } catch (err) {
       logMessage(instanceId, instance.name, phone, message, false);
-      throw new Error(`Erro ao enviar mensagem: ${err.message}`);
+      throw new HttpException(500, `Erro ao enviar mensagem: ${err.message}`);
     }
   }
 
