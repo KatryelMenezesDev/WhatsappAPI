@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "tsnd -r tsconfig-paths/register --exit-child --respawn --transpile-only --ignore-watch node_modules src/server.ts",
-    "build": "babel src --extensions \".js,.ts\" --out-dir dist --copy-files",
+    "build": "tsup src/",
     "start": "tsx ./dist/server.js"
   },
   "dependencies": {
@@ -23,25 +23,18 @@
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.23.0",
-    "@babel/core": "^7.23.2",
-    "@babel/plugin-proposal-decorators": "^7.23.2",
-    "@babel/preset-env": "^7.23.2",
-    "@babel/preset-typescript": "^7.26.0",
-    "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/joi": "^17.2.3",
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.8.5",
+    "tsup": "^8.3.5",
     "@types/swagger-jsdoc": "^6.0.2",
     "@types/swagger-ui-express": "^4.1.5",
-    "@typescript-eslint/eslint-plugin": "^6.7.5",
     "@typescript-eslint/parser": "^6.7.5",
-    "babel-plugin-transform-typescript-metadata": "^0.3.2",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^3.13.0",
-    "typescript": "^5.7.2"
+    "typescript": "5.3"
   }
 }
