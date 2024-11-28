@@ -42,7 +42,7 @@ Essa API é projetada para ser fácil de usar e altamente customizável, garanti
 
 2. **Clone este repositório**  
    ```bash
-   git clone https://github.com/seu-usuario/WhatsappApi.git
+   git clone https://github.com/KatryelMenezesDev/WhatsappAPI.git
    cd WhatsappApi
 
 3. **Instale as dependências**  
