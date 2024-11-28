@@ -51,17 +51,20 @@ const createClientInstance = (instanceId, name) => {
 app.post('/add-instance', (req, res) => {
     const { name } = req.body;
     if (!name) {
-        return res.status(400).send('Nome é obrigatório');
+        return res.status(400).json({ message: 'Nome é obrigatório' });
     }
 
     const instanceId = uuidv4();
     createClientInstance(instanceId, name);
 
-    res.send({
-        id: instanceId,
-        name: name,
-        auth: instances[instanceId].auth,
-        message: 'Instância está inicializando e o QR Code será gerado em breve.',
+    res.json({
+        message: 'Instância criada com sucesso',
+        data: {
+            id: instanceId,
+            name: name,
+            auth: instances[instanceId].auth,
+            qrCode: instances[instanceId].qrCode,
+        },
     });
 });
 
@@ -73,7 +76,10 @@ app.get('/instances', (req, res) => {
         qrCode: instances[id].qrCode,
         auth: instances[id].auth,
     }));
-    res.send(instanceList);
+    res.json({
+        message: 'Lista de instâncias',
+        data: instanceList,
+    });
 });
 
 // Endpoint para obter detalhes de uma instância específica
@@ -81,14 +87,17 @@ app.get('/instance/:id', (req, res) => {
     const { id } = req.params;
     const instance = instances[id];
     if (instance) {
-        res.send({
-            id,
-            name: instance.name,
-            qrCode: instance.qrCode,
-            auth: instance.auth,
+        res.json({
+            message: 'Detalhes da instância',
+            data: {
+                id,
+                name: instance.name,
+                qrCode: instance.qrCode,
+                auth: instance.auth,
+            },
         });
     } else {
-        res.status(404).send('Instância não encontrada');
+        res.status(404).json({ message: 'Instância não encontrada' });
     }
 });
 
@@ -98,9 +107,9 @@ app.delete('/instance/:id', (req, res) => {
     if (instances[id]) {
         instances[id].client.destroy();
         delete instances[id];
-        res.send(`Instância ${id} deletada`);
+        res.json({ message: `Instância ${id} deletada com sucesso` });
     } else {
-        res.status(404).send('Instância não encontrada');
+        res.status(404).json({ message: 'Instância não encontrada' });
     }
 });
 
@@ -110,12 +119,18 @@ app.post('/send-message', (req, res) => {
     const instance = instances[instanceId];
     if (instance) {
         instance.client.sendMessage(number, message).then(response => {
-            res.send(response);
+            res.json({
+                message: 'Mensagem enviada com sucesso',
+                data: response,
+            });
         }).catch(err => {
-            res.status(500).send(err);
+            res.status(500).json({
+                message: 'Erro ao enviar mensagem',
+                error: err,
+            });
         });
     } else {
-        res.status(404).send('Instância não encontrada');
+        res.status(404).json({ message: 'Instância não encontrada' });
     }
 });
 
