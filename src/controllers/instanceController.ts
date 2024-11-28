@@ -8,7 +8,12 @@ class InstanceController {
       const instance = instanceService.createInstance(name);
       res.json({
         message: 'Instância criada com sucesso',
-        data: instance,
+        data: {
+          id: instance.id,
+          name: instance.name,
+          auth: instance.auth,
+          qrCode: instance.qrCode,
+        },
       });
     } catch (error) {
       next(error);
@@ -17,7 +22,13 @@ class InstanceController {
 
   public listInstances(req: Request, res: Response, next: NextFunction): void {
     try {
-      const instances = instanceService.getAllInstances();
+      const instances = instanceService.getAllInstances().map(instance => ({
+        id: instance.id,
+        name: instance.name,
+        auth: instance.auth,
+        qrCode: instance.qrCode,
+      }));
+
       res.json({
         message: 'Lista de instâncias',
         data: instances,
@@ -34,7 +45,12 @@ class InstanceController {
       if (instance) {
         res.json({
           message: 'Detalhes da instância',
-          data: instance,
+          data: {
+            id: instance.id,
+            name: instance.name,
+            auth: instance.auth,
+            qrCode: instance.qrCode,
+          },
         });
       } else {
         res.status(404).json({ message: 'Instância não encontrada' });

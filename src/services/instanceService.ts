@@ -15,7 +15,7 @@ class InstanceService {
       authStrategy: new NoAuth(),
     });
 
-    const instance: Instance = { client, name, qrCode: '', auth: false };
+    const instance: Instance = { client, id: instanceId, name, auth: false, qrCode: '' };
     this.instances.set(instanceId, instance);
 
     client.on('qr', (qr) => {
