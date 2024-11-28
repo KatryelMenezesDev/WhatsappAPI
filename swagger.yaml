@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: API de Gerenciamento de Instâncias e Envio de Mensagens
-  description: Esta API permite a criação e gerenciamento de instâncias do WhatsApp, além do envio de mensagens através dessas instâncias.
+  description: API para criar e gerenciar instâncias do WhatsApp e enviar mensagens através delas.
   version: 1.0.0
 servers:
   - url: http://localhost:3000
@@ -14,12 +14,59 @@ components:
       scheme: bearer
       bearerFormat: JWT
 
+  schemas:
+    Instance:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          example: "Instância 1"
+        auth:
+          type: boolean
+          example: false
+        qrCode:
+          type: string
+          example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        instanceId:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          example: "Instância 1"
+        phone:
+          type: string
+          example: "5511998765432"
+        message:
+          type: string
+          example: "Olá, esta é uma mensagem de teste."
+        success:
+          type: boolean
+          example: true
+        date:
+          type: string
+          format: date-time
+          example: "2024-11-28T16:15:37-03:00"
+
 security:
   - bearerAuth: []
 
 paths:
-  /add-instance:
+  /instances:
     post:
+      tags:
+        - Instâncias
       summary: Adiciona uma nova instância do WhatsApp
       security:
         - bearerAuth: []
@@ -47,21 +94,7 @@ paths:
                     type: string
                     example: "Instância criada com sucesso"
                   data:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                        format: uuid
-                        example: "123e4567-e89b-12d3-a456-426614174000"
-                      name:
-                        type: string
-                        example: "Instância 1"
-                      auth:
-                        type: boolean
-                        example: false
-                      qrCode:
-                        type: string
-                        example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+                    $ref: '#/components/schemas/Instance'
         '400':
           description: Requisição inválida
           content:
@@ -72,8 +105,10 @@ paths:
                   message:
                     type: string
                     example: "O campo 'name' é obrigatório."
-  /instances:
+
     get:
+      tags:
+        - Instâncias
       summary: Lista todas as instâncias
       security:
         - bearerAuth: []
@@ -91,23 +126,12 @@ paths:
                   data:
                     type: array
                     items:
-                      type: object
-                      properties:
-                        id:
-                          type: string
-                          format: uuid
-                          example: "123e4567-e89b-12d3-a456-426614174000"
-                        name:
-                          type: string
-                          example: "Instância 1"
-                        qrCode:
-                          type: string
-                          example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
-                        auth:
-                          type: boolean
-                          example: false
-  /instance/{id}:
+                      $ref: '#/components/schemas/Instance'
+
+  /instances/{id}:
     get:
+      tags:
+        - Instâncias
       summary: Obtém detalhes de uma instância específica
       security:
         - bearerAuth: []
@@ -131,21 +155,7 @@ paths:
                     type: string
                     example: "Detalhes da instância"
                   data:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                        format: uuid
-                        example: "123e4567-e89b-12d3-a456-426614174000"
-                      name:
-                        type: string
-                        example: "Instância 1"
-                      qrCode:
-                        type: string
-                        example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
-                      auth:
-                        type: boolean
-                        example: false
+                    $ref: '#/components/schemas/Instance'
         '404':
           description: Instância não encontrada
           content:
@@ -156,7 +166,10 @@ paths:
                   message:
                     type: string
                     example: "Instância não encontrada"
+
     delete:
+      tags:
+        - Instâncias
       summary: Deleta uma instância específica
       security:
         - bearerAuth: []
@@ -189,8 +202,11 @@ paths:
                   message:
                     type: string
                     example: "Instância não encontrada"
-  /send-message:
+
+  /messages:
     post:
+      tags:
+        - Mensagens
       summary: Envia uma mensagem através de uma instância específica
       security:
         - bearerAuth: []
@@ -266,20 +282,43 @@ paths:
                     example: false
                   message:
                     type: string
-                    example: "Instância não encontrada."
-        '500':
-          description: Erro ao enviar mensagem
+                    example: "Erro ao enviar mensagem."
+                  error:
+                    type: string
+                    example: "Detalhes técnicos do erro."
+  /messages/history:
+    get:
+      tags:
+        - Mensagens
+      summary: Retorna o histórico de mensagens
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Histórico de mensagens recuperado com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+        '401':
+          description: Token de autenticação não fornecido
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                    example: false
                   message:
                     type: string
-                    example: "Erro ao enviar mensagem."
-                  error:
+                    example: "Token de autenticação não fornecido."
+        '403':
+          description: Token de autenticação inválido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
                     type: string
-                    example: "Detalhes técnicos do erro."
+                    example: "Token de autenticação inválido ou expirado."
