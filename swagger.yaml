@@ -1,0 +1,265 @@
+openapi: 3.0.0
+info:
+  title: API de Gerenciamento de Instâncias e Envio de Mensagens
+  description: Esta API permite a criação e gerenciamento de instâncias do WhatsApp, além do envio de mensagens através dessas instâncias.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Servidor local
+
+paths:
+  /add-instance:
+    post:
+      summary: Adiciona uma nova instância do WhatsApp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Instância 1"
+              required:
+                - name
+      responses:
+        '200':
+          description: Instância criada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Instância criada com sucesso"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: "123e4567-e89b-12d3-a456-426614174000"
+                      name:
+                        type: string
+                        example: "Instância 1"
+                      auth:
+                        type: boolean
+                        example: false
+                      qrCode:
+                        type: string
+                        example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+        '400':
+          description: Requisição inválida
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "O campo 'name' é obrigatório."
+  /instances:
+    get:
+      summary: Lista todas as instâncias
+      responses:
+        '200':
+          description: Lista de instâncias
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Lista de instâncias"
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          example: "123e4567-e89b-12d3-a456-426614174000"
+                        name:
+                          type: string
+                          example: "Instância 1"
+                        qrCode:
+                          type: string
+                          example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+                        auth:
+                          type: boolean
+                          example: false
+  /instance/{id}:
+    get:
+      summary: Obtém detalhes de uma instância específica
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        '200':
+          description: Detalhes da instância
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Detalhes da instância"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: "123e4567-e89b-12d3-a456-426614174000"
+                      name:
+                        type: string
+                        example: "Instância 1"
+                      qrCode:
+                        type: string
+                        example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+                      auth:
+                        type: boolean
+                        example: false
+        '404':
+          description: Instância não encontrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Instância não encontrada"
+    delete:
+      summary: Deleta uma instância específica
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        '200':
+          description: Instância deletada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Instância 123e4567-e89b-12d3-a456-426614174000 deletada com sucesso"
+        '404':
+          description: Instância não encontrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Instância não encontrada"
+  /send-message:
+    post:
+      summary: Envia uma mensagem através de uma instância específica
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                instanceId:
+                  type: string
+                  format: uuid
+                  example: "123e4567-e89b-12d3-a456-426614174000"
+                phone:
+                  type: string
+                  example: "5511998765432"
+                message:
+                  type: string
+                  example: "Olá, esta é uma mensagem de teste."
+              required:
+                - instanceId
+                - phone
+                - message
+      responses:
+        '200':
+          description: Mensagem enviada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Mensagem enviada com sucesso."
+                  data:
+                    type: object
+                    properties:
+                      phone:
+                        type: string
+                        example: "5511998765432"
+                      message:
+                        type: string
+                        example: "Olá, esta é uma mensagem de teste."
+                      response:
+                        type: object
+                        example: {}
+        '403':
+          description: Instância não autenticada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Instância não autenticada. Por favor, autentique-se antes de enviar mensagens."
+        '404':
+          description: Instância ou número não encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Instância não encontrada."
+        '500':
+          description: Erro ao enviar mensagem
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Erro ao enviar mensagem."
+                  error:
+                    type: string
+                    example: "Detalhes técnicos do erro."

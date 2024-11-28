@@ -7,12 +7,14 @@
   "license": "MIT",
   "dependencies": {
     "celebrate": "^15.0.3",
+    "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "morgan": "^1.10.0",
     "sqlite3": "^5.1.7",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^11.0.3",
-    "whatsapp-web.js": "^1.26.0"
+    "whatsapp-web.js": "^1.26.0",
+    "yamljs": "^0.3.0"
   }
 }

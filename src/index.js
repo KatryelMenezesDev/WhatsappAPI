@@ -4,12 +4,20 @@ const { Client, NoAuth } = require('whatsapp-web.js');
 const { v4: uuidv4 } = require('uuid');
 const { celebrate, Joi, Segments, errors } = require('celebrate');
 const sqlite3 = require('sqlite3').verbose();
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+const path = require('path');
+
+// Carrega o arquivo swagger.yaml
+const swaggerDocument = YAML.load(path.join(__dirname, '../swagger.yaml'));
 
 const app = express();
 const port = 3000;
 
 app.use(morgan('dev'));
 app.use(express.json());
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 const instances = {};
 
