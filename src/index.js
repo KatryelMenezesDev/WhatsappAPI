@@ -115,13 +115,13 @@ app.delete('/instance/:id', (req, res) => {
 
 // Endpoint para enviar uma mensagem
 app.post('/send-message', (req, res) => {
-    const { instanceId, number, message } = req.body;
+    const { instanceId, phone, message } = req.body;
 
     // Verifica se todos os parâmetros necessários foram fornecidos
-    if (!instanceId || !number || !message) {
+    if (!instanceId || !phone || !message) {
         return res.status(400).json({
             success: false,
-            message: 'Parâmetros ausentes: instanceId, number e message são obrigatórios.',
+            message: 'Parâmetros ausentes: instanceId, phone e message são obrigatórios.',
         });
     }
 
@@ -144,13 +144,13 @@ app.post('/send-message', (req, res) => {
     }
 
     // Tenta enviar a mensagem
-    instance.client.sendMessage(number, message)
+    instance.client.sendMessage(phone, message)
         .then(response => {
             res.json({
                 success: true,
                 message: 'Mensagem enviada com sucesso.',
                 data: {
-                    number,
+                    phone,
                     message,
                     response,
                 },
