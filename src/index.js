@@ -9,15 +9,8 @@ app.use(express.json());
 
 const instances = {};
 
-// Endpoint para adicionar uma nova instância
-app.post('/add-instance', (req, res) => {
-    const { name } = req.body;
-    if (!name) {
-        return res.status(400).send('Nome é obrigatório');
-    }
-
-    const instanceId = uuidv4();
-
+// Função para criar e inicializar uma nova instância do cliente
+const createClientInstance = (instanceId, name) => {
     const client = new Client({
         puppeteer: {
             args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -29,7 +22,7 @@ app.post('/add-instance', (req, res) => {
 
     client.on('qr', (qr) => {
         instances[instanceId].qrCode = qr;
-        console.log(`QR RECEBIDO para a instância ${instanceId}`, qr);
+        console.log(`QR RECEBIDO para a instância ${instanceId}`);
     });
 
     client.on('authenticated', () => {
@@ -42,13 +35,28 @@ app.post('/add-instance', (req, res) => {
         console.log(`Falha na autenticação da instância ${instanceId}.`);
     });
 
-    client.once('ready', () => {
+    client.on('ready', () => {
         console.log(`Cliente para a instância ${instanceId} está pronto!`);
     });
 
-    client.initialize();
+    client.on('disconnected', (reason) => {
+        instances[instanceId].auth = false;
+        console.log(`Instância ${instanceId} desconectada. Motivo: ${reason}`);
+    });
 
-    // Retorna o UUID, nome e uma mensagem indicando que o QR Code está sendo gerado
+    client.initialize();
+};
+
+// Endpoint para adicionar uma nova instância
+app.post('/add-instance', (req, res) => {
+    const { name } = req.body;
+    if (!name) {
+        return res.status(400).send('Nome é obrigatório');
+    }
+
+    const instanceId = uuidv4();
+    createClientInstance(instanceId, name);
+
     res.send({
         id: instanceId,
         name: name,
@@ -101,15 +109,11 @@ app.post('/send-message', (req, res) => {
     const { instanceId, number, message } = req.body;
     const instance = instances[instanceId];
     if (instance) {
-        if (instance.auth) {
-            instance.client.sendMessage(number, message).then(response => {
-                res.send(response);
-            }).catch(err => {
-                res.status(500).send(err);
-            });
-        } else {
-            res.status(403).send('Instância não autenticada');
-        }
+        instance.client.sendMessage(number, message).then(response => {
+            res.send(response);
+        }).catch(err => {
+            res.status(500).send(err);
+        });
     } else {
         res.status(404).send('Instância não encontrada');
     }
