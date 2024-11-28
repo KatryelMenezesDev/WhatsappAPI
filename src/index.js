@@ -114,7 +114,7 @@ app.delete('/instance/:id', (req, res) => {
 });
 
 // Endpoint para enviar uma mensagem
-app.post('/send-message', (req, res) => {
+app.post('/send-message', async (req, res) => {
     const { instanceId, phone, message } = req.body;
 
     // Verifica se todos os parâmetros necessários foram fornecidos
@@ -143,26 +143,37 @@ app.post('/send-message', (req, res) => {
         });
     }
 
-    // Tenta enviar a mensagem
-    instance.client.sendMessage(phone, message)
-        .then(response => {
-            res.json({
-                success: true,
-                message: 'Mensagem enviada com sucesso.',
-                data: {
-                    phone,
-                    message,
-                    response,
-                },
-            });
-        })
-        .catch(err => {
-            res.status(500).json({
+    // Adiciona o sufixo '@c.us' ao número de telefone
+    const chatId = `${phone}@c.us`;
+
+    try {
+        // Verifica se o número está registrado no WhatsApp
+        const numberDetails = await instance.client.getNumberId(phone);
+        if (!numberDetails) {
+            return res.status(404).json({
                 success: false,
-                message: 'Erro ao enviar mensagem.',
-                error: err.toString(),
+                message: 'O número fornecido não está registrado no WhatsApp.',
             });
+        }
+
+        // Envia a mensagem
+        const response = await instance.client.sendMessage(chatId, message);
+        res.json({
+            success: true,
+            message: 'Mensagem enviada com sucesso.',
+            data: {
+                phone,
+                message,
+                response,
+            },
         });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao enviar mensagem.',
+            error: err.toString(),
+        });
+    }
 });
 
 app.listen(port, () => {
