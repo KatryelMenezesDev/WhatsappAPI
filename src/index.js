@@ -8,6 +8,10 @@ const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 const path = require('path');
 
+require('dotenv').config();
+
+
+
 // Carrega o arquivo swagger.yaml
 const swaggerDocument = YAML.load(path.join(__dirname, '../swagger.yaml'));
 
@@ -15,6 +19,7 @@ const app = express();
 const port = 3000;
 
 app.use(morgan('dev'));
+app.use(authenticate);
 app.use(express.json());
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -57,6 +62,22 @@ const logMessage = (instanceId, name, phone, message, success) => {
     });
 };
 
+// Middleware de autenticação
+const authenticate = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Token de autenticação não fornecido ou malformado.' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    if (token !== process.env.SECRET_KEY) {
+        return res.status(403).json({ message: 'Token de autenticação inválido.' });
+    }
+
+    next();
+};
+
+
 // Função para criar e inicializar uma nova instância do cliente
 const createClientInstance = (instanceId, name) => {
     const client = new Client({
@@ -96,7 +117,7 @@ const createClientInstance = (instanceId, name) => {
 };
 
 // Rota para adicionar uma nova instância
-app.post('/add-instance', celebrate({
+app.post('/add-instance', authenticate,  celebrate({
     [Segments.BODY]: Joi.object().keys({
         name: Joi.string().required().messages({
             'any.required': 'O campo "name" é obrigatório.',
@@ -120,7 +141,7 @@ app.post('/add-instance', celebrate({
 });
 
 // Rota para listar todas as instâncias
-app.get('/instances', (req, res) => {
+app.get('/instances', authenticate, (req, res) => {
     const instanceList = Object.keys(instances).map(id => ({
         id,
         name: instances[id].name,
@@ -134,7 +155,7 @@ app.get('/instances', (req, res) => {
 });
 
 // Rota para obter detalhes de uma instância específica
-app.get('/instance/:id', celebrate({
+app.get('/instance/:id', authenticate,  celebrate({
     [Segments.PARAMS]: Joi.object().keys({
         id: Joi.string().uuid().required().messages({
             'any.required': 'O parâmetro "id" é obrigatório.',
@@ -160,7 +181,7 @@ app.get('/instance/:id', celebrate({
 });
 
 // Rota para deletar uma instância
-app.delete('/instance/:id', celebrate({
+app.delete('/instance/:id', authenticate,  celebrate({
     [Segments.PARAMS]: Joi.object().keys({
         id: Joi.string().uuid().required().messages({
             'any.required': 'O parâmetro "id" é obrigatório.',
@@ -179,7 +200,7 @@ app.delete('/instance/:id', celebrate({
 });
 
 // Rota para enviar uma mensagem
-app.post('/send-message', celebrate({
+app.post('/send-message', authenticate, celebrate({
     [Segments.BODY]: Joi.object().keys({
         instanceId: Joi.string().uuid().required().messages({
             'any.required': 'O campo "instanceId" é obrigatório.',
