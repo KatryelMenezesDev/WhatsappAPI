@@ -116,22 +116,53 @@ app.delete('/instance/:id', (req, res) => {
 // Endpoint para enviar uma mensagem
 app.post('/send-message', (req, res) => {
     const { instanceId, number, message } = req.body;
+
+    // Verifica se todos os parâmetros necessários foram fornecidos
+    if (!instanceId || !number || !message) {
+        return res.status(400).json({
+            success: false,
+            message: 'Parâmetros ausentes: instanceId, number e message são obrigatórios.',
+        });
+    }
+
     const instance = instances[instanceId];
-    if (instance) {
-        instance.client.sendMessage(number, message).then(response => {
+
+    // Verifica se a instância existe
+    if (!instance) {
+        return res.status(404).json({
+            success: false,
+            message: 'Instância não encontrada.',
+        });
+    }
+
+    // Verifica se a instância está autenticada
+    if (!instance.auth) {
+        return res.status(403).json({
+            success: false,
+            message: 'Instância não autenticada. Por favor, autentique-se antes de enviar mensagens.',
+        });
+    }
+
+    // Tenta enviar a mensagem
+    instance.client.sendMessage(number, message)
+        .then(response => {
             res.json({
-                message: 'Mensagem enviada com sucesso',
-                data: response,
+                success: true,
+                message: 'Mensagem enviada com sucesso.',
+                data: {
+                    number,
+                    message,
+                    response,
+                },
             });
-        }).catch(err => {
+        })
+        .catch(err => {
             res.status(500).json({
-                message: 'Erro ao enviar mensagem',
-                error: err,
+                success: false,
+                message: 'Erro ao enviar mensagem.',
+                error: err.toString(),
             });
         });
-    } else {
-        res.status(404).json({ message: 'Instância não encontrada' });
-    }
 });
 
 app.listen(port, () => {
