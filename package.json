@@ -1,0 +1,11 @@
+{
+  "name": "whatsappapi",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/KatryelMenezesDev/WhatsappAPI.git",
+  "author": "Katryel Menezes <katryelmenezesvieira14@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "whatsapp-web.js": "^1.26.0"
+  }
+}
